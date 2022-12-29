@@ -88,10 +88,20 @@ void create_cell_types( void )
 	cell_defaults.functions.update_velocity = standard_update_cell_velocity;
 
 	cell_defaults.functions.update_migration_bias = NULL; 
-	cell_defaults.functions.update_phenotype = update_cell_and_death_parameters_aff;
+
+	//birth behavior
+	
+	if(parameters.strings("enable_sigmoid") == "1"){
+	  cell_defaults.functions.update_phenotype = update_cell_and_death_parameters_sigmoid;
+	}else if(parameters.strings("enable_carryingcapacity") == "1"){
+	  cell_defaults.functions.update_phenotype = update_cell_and_death_parameters_carryingcapacity;
+	 }else{
+	  cell_defaults.functions.update_phenotype = update_cell_and_death_parameters_standard;
+	}
+
+
 	cell_defaults.functions.custom_cell_rule = NULL; 
 	cell_defaults.functions.contact_function = NULL; 
-	
 	
 	cell_defaults.functions.add_cell_basement_membrane_interactions = NULL; 
 	cell_defaults.functions.calculate_distance_to_membrane = NULL; 
@@ -115,16 +125,20 @@ void create_cell_types( void )
 
 	cell_defaults.functions.set_orientation = up_orientation;
 	cell_defaults.functions.cycle_model = live;
-	cell_defaults.phenotype.motility.is_motile = false;
+	if(parameters.doubles("cell_migration_speed") > 0.0){
+	  cell_defaults.phenotype.motility.is_motile = true;
+	}else{
+	  cell_defaults.phenotype.motility.is_motile = false;
+	}
 
 	cell_defaults.custom_data.add_variable( "growth_mut" , "dimensionless", 0 );
 	//Division value
 	cell_defaults.custom_data.add_variable( "growth" , "dimensionless", 0 );
-	//Migration mutation barcode 
+	//Deleterious mutation barcode 
 	cell_defaults.custom_data.add_variable( "mig_mut" , "dimensionless", 0 );
 	//migration rate
-	cell_defaults.custom_data.add_variable( "mig" , "dimensionless", 0 );
-	//oxygen/gf concentration
+	cell_defaults.custom_data.add_variable( "mig" , "dimensionless", parameters.doubles("cell_migration_speed" ));
+	//Stores the cell's current pressure
 	cell_defaults.custom_data.add_variable( "gf" , "dimensionless", 0 );
 
 	TC = cell_defaults;
@@ -141,6 +155,9 @@ void create_cell_types( void )
 	TC.phenotype.cycle.data.transition_rate( 0, 0 ) *= 1; //return here
 	TC.custom_data[1] = TC.phenotype.cycle.data.transition_rate( 0, 0 ); 
 	TC.phenotype.death.rates[apoptosis_model_index] = parameters.doubles("cell_death_rate") * TC.phenotype.cycle.data.transition_rate( 0, 0 ); 
+
+	TC.phenotype.motility.migration_speed = parameters.doubles("cell_migration_speed" );
+	TC.custom_data[3] = TC.phenotype.motility.migration_speed;
 	
 	cell_defaults.functions.update_phenotype = phenotype_function; 
 	cell_defaults.functions.custom_cell_rule = custom_function; 
@@ -210,7 +227,7 @@ void setup_tissue( void )
 	return; 
 }
 
-void update_cell_and_death_parameters_aff( Cell* pCell, Phenotype& phenotype, double dt )
+void update_cell_and_death_parameters_standard( Cell* pCell, Phenotype& phenotype, double dt )
 {
 
   if( phenotype.death.dead == true )
@@ -221,19 +238,62 @@ void update_cell_and_death_parameters_aff( Cell* pCell, Phenotype& phenotype, do
 
   if( pres > parameters.doubles( "pressure_threshold" ) )
     {
-
       pCell->phenotype.cycle.data.transition_rate( 0, 0 ) = 0.0;
-
-      //      std::cout << "Setting transition rate to 0\n";
     }else{
-
-    pCell->phenotype.cycle.data.transition_rate( 0, 0 ) = pCell->custom_data[1];
-    //    std::cout << "Reverting transition rate\n";
-
+      pCell->phenotype.cycle.data.transition_rate( 0, 0 ) = pCell->custom_data[1];
   }
 
   return;
 }
+
+//This function is to smooth the cut off between 0 and full birth rates as a function of 
+//pressure. This function encodes a sigmoidal relationship between pressure and birth
+void update_cell_and_death_parameters_sigmoid( Cell* pCell, Phenotype& phenotype, double dt )
+{
+
+  if( phenotype.death.dead == true )
+    { return; }
+
+  double pres = pCell->state.simple_pressure;
+  pCell->custom_data[4] = pres;
+  pCell->phenotype.cycle.data.transition_rate( 0, 0 ) = pCell->custom_data[1] * (1 - 1/(1 +  exp(-5 * (pres - 1))));
+
+  return;
+  
+}
+
+//This function updates the death rate as the tumor grows so its growth ultimately slows and
+//reaches a carrying capacity
+void update_cell_and_death_parameters_carryingcapacity( Cell* pCell, Phenotype& phenotype, double dt )
+{
+
+  if( phenotype.death.dead == true )
+    { return; }
+
+  int apoptosis_model_index = pCell->phenotype.death.find_death_model_index( "Apoptosis" );
+
+  double f_carrying_capacity =  (*all_cells).size() / parameters.doubles("cellNumEndCondition") ;
+
+  //  std::cout<< "carrying capacity: " + std::to_string(f_carrying_capacity) + "\n";
+  
+  double relative_death = parameters.doubles("cell_death_rate") +  0.75 * (1 - parameters.doubles("cell_death_rate"))/( 1 + exp(-10 * (f_carrying_capacity - 0.5)));
+
+    pCell->phenotype.death.rates[apoptosis_model_index] = relative_death * pCell->custom_data[1];
+    
+    double pres = pCell->state.simple_pressure;
+    pCell->custom_data[4] = pres;
+
+    if( pres > parameters.doubles( "pressure_threshold" ) )
+      {
+	pCell->phenotype.cycle.data.transition_rate( 0, 0 ) = 0.0;
+      }else{
+        pCell->phenotype.cycle.data.transition_rate( 0, 0 ) = pCell->custom_data[1];
+    }
+
+  return;
+}
+
+
 
 bool stopCondition()
 {

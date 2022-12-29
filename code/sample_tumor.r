@@ -107,6 +107,7 @@ sampleTrees <- function(dirToProcess, sampleSize, diversifiedOrRandom, dimension
         relInds <- sort(relInds, decreasing = TRUE)
 
         child_list <- sapply(paste(relInds),function(x) NULL)
+       
 
         for(ind in relInds){
 
@@ -121,6 +122,7 @@ sampleTrees <- function(dirToProcess, sampleSize, diversifiedOrRandom, dimension
             }
 
         }
+
 
 	relationshipTree <- list()
         relationshipTree$array_format <- inf_par_child

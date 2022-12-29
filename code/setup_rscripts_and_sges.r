@@ -1,6 +1,7 @@
 
 
-generate_Rscript <- function(dir, deathrate, dimension, mu, cellNumEndCondition, index, driverLim, fitness, threshold, reps = 8){
+generate_Rscript <- function(dir, deathrate, dimension, mu, cellNumEndCondition, index,
+                             driverLim, fitness, threshold, reps = 8, deleteriousMu = 1, migration = 0, useSigmoid = 'false', useCarryingCapacity = 'false'){
 
 dimbool <- "\'true\'"
 sizeval <- 1000
@@ -30,16 +31,17 @@ dirpath <- "/net/feder/vol1/project/tumor_evolutionary_sims/out/"
 
 daydir <- "%s/d%s_dim%s_w%s_mu%s_N%s_i%s/"
 
-setup_configs_cube(width = %s, height = %s, depth = %s, threads = 1, migration = 0, 
+setup_configs_cube(width = %s, height = %s, depth = %s, threads = 1, migration = %s, 
                    fitness = %s, death = c(%s),
-                   threshold = %s, mutation_growth = %s, mutation_mig = 1, 
+                   threshold = %s, mutation_growth = %s, mutation_mig = %s, 
                    time = 200000000, reps = %s, cellNumEndCondition = %s,
-                   driverLim = %s, initialCellNumber = 1, daydir, use2D = %s)
+                   driverLim = %s, initialCellNumber = 1, daydir, use2D = %s, 
+                   useSigmoid = \'%s\', useCarryingCapacity = \'%s\')
 
 runner_restarter(daydir)
 process(daydir)
-parse_relationships(daydir)', dir, deathrate_dirname, dimension, fitness, mu, cellNumEndCondition, index, sizeval, sizeval, depthval, 
-			      fitness, deathrate, threshold, mu, reps, cellNumEndCondition, driverLim, dimbool)
+parse_relationships(daydir)', dir, deathrate_dirname, dimension, fitness, mu, cellNumEndCondition, index, sizeval, sizeval, depthval, migration,
+			      fitness, deathrate, threshold, mu, deleteriousMu, reps, cellNumEndCondition, driverLim, dimbool, useSigmoid, useCarryingCapacity)
 
      return(command)
 }

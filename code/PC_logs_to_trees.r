@@ -164,6 +164,7 @@ rpois( length((relationshipTree$array_format)$index), 1)
         }
     }
 
+
 #Also, I think we need to add a 0 entry because it's missing because it technically was never born
 
     allAnc <- allAnc %>% add_row(birthdate = 0, 

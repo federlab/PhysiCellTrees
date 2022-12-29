@@ -664,7 +664,7 @@ void Cell::mutate_daughter(User_Parameters pars)
   if( custom_data[0] < pars.doubles("driverLim"))
     {
 
-      //Growth rate mutations                                                                                                                                                  
+      //Beneficial (driver) mutations                                                                                                                                                
       if( UniformRandom() >  pars.doubles( "cell_mutation_rate_growth" )  )
         {
 
@@ -675,17 +675,16 @@ void Cell::mutate_daughter(User_Parameters pars)
         }
     }
 
-  //Migration rate mutation                                                                                                                                                
+  // This permits deleterious mutations to accumulate. The variables are all named "migration", but they work as follows:
+  //cell_mutation_rate_mig is the probability of a deleterious mutation rate
+  //cell_migration_speed is actually the fitness cost of a deleterious mutation
   if( UniformRandom() >  pars.doubles( "cell_mutation_rate_mig" )  )
     {
 
-      if(phenotype.motility.migration_speed == 0)
-        {
-          phenotype.motility.migration_speed = 1;
-        }
-      phenotype.motility.migration_speed *= NormalRandom(1, pars.doubles("cell_migration_speed"));
-      custom_data[2] = UniformRandom();
-      custom_data[3] = phenotype.motility.migration_speed;
+      phenotype.cycle.data.transition_rate( 0, 0 ) *= (1 - 0.001);
+      //this counts the number of deleterious mutations
+      custom_data[2] = floor(custom_data[2]) + 1 + UniformRandom();
+      custom_data[1] = phenotype.cycle.data.transition_rate( 0, 0 );
 
     }
 

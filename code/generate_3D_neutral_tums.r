@@ -10,14 +10,15 @@ dvals <- seq(0, 0.8, by = 0.1)
 dval_string <- paste(dvals, collapse = ",")
 
 reps <- 8
-
+cellEndCondition <- 15000
+    
 foreach(d = dvals)%do%{
   foreach(i = c(1:3))%do%{
 
           scriptname <- paste0(subdir_name,'/d',d ,'_ind', i,'.r')
 
           #First, write an R script that describes how to write the xml and run the doc
-          rscript <- (generate_Rscript(subdir_name, d, 3, 1, 15000, i, 0, 1, 1, reps))
+          rscript <- (generate_Rscript(subdir_name, d, 3, 1, cellEndCondition, i, 0, 1, 1, reps))
           write(rscript, scriptname)
 
           sgescript <- generate_sgescript(5 + d * 20, scriptname)
@@ -27,7 +28,7 @@ foreach(d = dvals)%do%{
 }
 
 scriptname <- paste0(subdir_name,'/dmult_ind1.r')
-rscript <- (generate_Rscript(subdir_name, dval_string, 3, 1, 15000, i, 0, 1, 1, 1))
+rscript <- (generate_Rscript(subdir_name, dval_string, 3, 1, cellEndCondition, i, 0, 1, 1, 1))
 write(rscript, scriptname)
 sgescript <- generate_sgescript(36, scriptname)
 write(sgescript, gsub("\\.r", "\\.sge", scriptname))

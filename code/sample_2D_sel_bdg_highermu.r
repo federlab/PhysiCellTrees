@@ -1,7 +1,7 @@
 source('sample_tumor.r')
 source('PC_logs_to_trees.r')
 
-dirToProcess <- "2D_sel_bdg_highermu"
+dirToProcess <- "2D_sel_bdg"
 dimension <- 2
 sampleSize <- 100
 diversifiedOrRandom <- "diversified"

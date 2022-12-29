@@ -91,7 +91,10 @@ void custom_function( Cell* pCell, Phenotype& phenotype , double dt );
 void contact_function( Cell* pMe, Phenotype& phenoMe , Cell* pOther, Phenotype& phenoOther , double dt ); 
 
 bool stopCondition( void );
-void update_cell_and_death_parameters_aff( Cell* pCell, Phenotype& phenotype, double dt );
+void update_cell_and_death_parameters_standard( Cell* pCell, Phenotype& phenotype, double dt );
+void update_cell_and_death_parameters_sigmoid( Cell* pCell, Phenotype& phenotype, double dt );
+void update_cell_and_death_parameters_carryingcapacity( Cell* pCell, Phenotype& phenotype, double dt );
+
 extern Cell_Definition TC;
 
 

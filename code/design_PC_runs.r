@@ -12,6 +12,7 @@ setup_dirs <- function(dirname){
 
 runner_restarter <- function(dirname, command = 'tumor_evolve'){
 
+    dirpath
     prefix <- paste0(dirpath,dirname,'/config_files/')
     confsToRun <- (list.files(paste0(prefix)))
 
@@ -52,9 +53,7 @@ runner_restarter <- function(dirname, command = 'tumor_evolve'){
                  endsOn0State = FALSE
              }
         }
-
     }
-
 }
 
 
@@ -124,16 +123,19 @@ parse_relationships <- function(dirname){
         write.csv(relationshipTree$array_format , file =
                       paste0(dirsh, "processed/", dirv, "_par_child.csv"), quote = FALSE)
 
-        names(relationshipTree$child_list) <- paste(1:length(relationshipTree$child_list))
+        if(0 == 1){
 
-        array_of_relationship_tree <- do.call("rbind", mapply(function(x, i){
-            if(is.null(x)){ x = "NULL" }
-            cbind(i, x)
-          }, relationshipTree$child_list, names(relationshipTree$child_list)))
+            names(relationshipTree$child_list) <- paste(1:length(relationshipTree$child_list))
+
+            array_of_relationship_tree <- do.call("rbind", mapply(function(x, i){
+                if(is.null(x)){ x = "NULL" }
+                cbind(i, x)
+            }, relationshipTree$child_list, names(relationshipTree$child_list)))
 
 
-        write.csv(array_of_relationship_tree, file =
-                  paste0(dirsh, "processed/", dirv, "_child_list.csv"))
+            write.csv(array_of_relationship_tree, file =
+                          paste0(dirsh, "processed/", dirv, "_child_list.csv"))
+        }
         
     }
 }
@@ -142,7 +144,7 @@ setup_configs_cube <- function(width = 1000, height = 1000, depth = 1000, thread
                                fitness = 1, death = 0, threshold = 10, 
                           mutation_growth = 1, mutation_mig = 1, time = 5000, reps = 3,
 			  		      cellNumEndCondition = 10000, driverLim = 3, initialCellNumber = 1,
-                          dirname, use2D = 'true'){
+                          dirname, use2D = 'true', useSigmoid = 'false', useCarryingCapacity = 'false'){
 
     setup_dirs(dirname)
 
@@ -180,73 +182,73 @@ setup_configs_cube <- function(width = 1000, height = 1000, depth = 1000, thread
             xmltoprint <- sprintf('<?xml version="1.0" encoding="UTF-8"?>
 
 <PhysiCell_settings version="devel-version">
-		    <domain>
+		 <domain>
 			<x_min>-%d</x_min>
-				<x_max>%d</x_max>
-					<y_min>-%d</y_min>
-						<y_max>%d</y_max>
-							<z_min>-%d</z_min>
-								<z_max>%d</z_max>
-									<dx>20</dx>
-										<dy>20</dy>
-											<dz>20</dz>
-												<use_2D>%s</use_2D>
-												</domain>
+			<x_max>%d</x_max>
+			<y_min>-%d</y_min>
+			<y_max>%d</y_max>
+			<z_min>-%d</z_min>
+			<z_max>%d</z_max>
+			<dx>20</dx>
+			<dy>20</dy>
+			<dz>20</dz>
+			<use_2D>%s</use_2D>
+		</domain>
 												
-												<overall>
-													<max_time units="min">%d</max_time> 
-														  <time_units>min</time_units>
-															<space_units>micron</space_units>
-															</overall>
+		<overall>
+			<max_time units="min">%d</max_time> 
+			<time_units>min</time_units>
+			<space_units>micron</space_units>
+		</overall>
 															
-															<parallel>
-															 <omp_num_threads>%d</omp_num_threads>
-															 </parallel> 
+		<parallel>
+			<omp_num_threads>%d</omp_num_threads>
+		</parallel> 
 															 
-															 <save>
-															  <folder>%s</folder> <!-- use . for root --> 
-
-															  		      <full_data>
-																	        <interval units="min">360</interval>
-																			   <enable>true</enable>
-																			    </full_data>
-																			     
-																			      <SVG>
-																			        <interval units="min">60</interval>
-																					   <enable>false</enable>
-</SVG>
+		<save>
+			<folder>%s</folder> <!-- use . for root --> 
+		<full_data>
+			<interval units="min">360</interval>
+                         <enable>true</enable>
+		</full_data>
+		<SVG>
+		<interval units="min">60</interval>
+                      <enable>false</enable>
+                   </SVG>
 		
-			<legacy_data>
-					<enable>false</enable>
-						</legacy_data>
-						</save>
+		   <legacy_data>
+		        <enable>false</enable>
+			</legacy_data>
+		</save>
 
-<options>
-		<virtual_wall_at_domain_edge>true</virtual_wall_at_domain_edge>
-<legacy_random_points_on_sphere_in_divide>false</legacy_random_points_on_sphere_in_divide>
+                <options>
+		    <virtual_wall_at_domain_edge>true</virtual_wall_at_domain_edge>
+                    <legacy_random_points_on_sphere_in_divide>false</legacy_random_points_on_sphere_in_divide>
 
-	</options>
+	        </options>
 
 	<user_parameters>
 		<random_seed type="int" units="dimensionless">%d</random_seed> 
-			     <cell_migration_speed type="double" units="micron/min">%f</cell_migration_speed>	
-			     			   <cell_relative_cycle_entry_rate type="double" units="dimensionless">%f</cell_relative_cycle_entry_rate>
-						   				   <cell_death_rate type="double" units="dimensionless">%f</cell_death_rate>
-										   		    <pressure_threshold type="double" units="dimensionless">%f</pressure_threshold>
-												    			<cell_mutation_rate_growth type="double" units="dimensionless">%f</cell_mutation_rate_growth>
-																		   <cell_mutation_rate_mig type="double" units="dimensionless">%f</cell_mutation_rate_mig>
+		<cell_migration_speed type="double" units="micron/min">%f</cell_migration_speed>	
+		<cell_relative_cycle_entry_rate type="double" units="dimensionless">%f</cell_relative_cycle_entry_rate>
+		<cell_death_rate type="double" units="dimensionless">%f</cell_death_rate>
+		<pressure_threshold type="double" units="dimensionless">%f</pressure_threshold>
+		<cell_mutation_rate_growth type="double" units="dimensionless">%f</cell_mutation_rate_growth>
+                <cell_mutation_rate_mig type="double" units="dimensionless">%f</cell_mutation_rate_mig>
                 <cellNumEndCondition type="double" units="dimensionless">%f</cellNumEndCondition>
                 <initial_cell_number type="double" units="dimensionless">%f</initial_cell_number>
                 <driverLim type="double" units="dimensionless">%f</driverLim>
                 <print_directory type="string" units="dimensionless">%s</print_directory>
                 <enable_z type="int" units="dimensionless">%s</enable_z>
+                <enable_sigmoid type="int" units="dimensionless">%s</enable_sigmoid>
+                <enable_carryingcapacity type="int" units="dimensionless">%s</enable_carryingcapacity>
 		</user_parameters>
 </PhysiCell_settings>)',  width, width, height, height, depth, depth, use2D, time, threads,
                           relDir, rseed,
                           p$migration, p$fitness, 
                           p$death, p$threshold, p$mutation_growth, p$mutation_mig, 
-			  	   		  p$cellNumEndCondition, p$initial_cell_number, p$driverLim, 
-                          relDir, enable_z)
+			  p$cellNumEndCondition, p$initial_cell_number, p$driverLim, 
+                          relDir, enable_z, useSigmoid, useCarryingCapacity)
 
   
 
